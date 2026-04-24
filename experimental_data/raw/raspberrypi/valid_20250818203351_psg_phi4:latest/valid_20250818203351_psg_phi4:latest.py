@@ -1,0 +1,89 @@
+import cv2
+import numpy as np
+import tensorflow as tf  # Ensure TensorFlow is imported here
+
+# Configuration Parameters
+model_path   = "models/ssd-mobilenet_v1/detect.tflite"
+label_path   = "models/ssd-mobilenet_v1/labelmap.txt"
+input_path   = "data/object_detection/sheeps.mp4"
+output_path   = "results/object_detection/test_results/sheeps_detections.mp4"
+confidence_threshold   = 0.5
+
+# Phase 1: Setup
+class Interpreter:
+    def __init__(self, model_path):
+        self.interpreter = tf.lite.Interpreter(model_path=model_path)
+        self.interpreter.allocate_tensors()
+    
+    def get_input_details(self):
+        return self.interpreter.get_input_details()
+    
+    def get_output_details(self):
+        return self.interpreter.get_output_details()
+
+    def set_tensor(self, index, data):
+        tensor = self.interpreter.tensor(index)  # Access the tensor without calling it
+        np.copyto(tensor(), data)  # Correctly pass the function to access its value
+
+    def invoke(self):
+        self.interpreter.invoke()
+
+    def get_tensor(self, index):
+        return self.interpreter.get_tensor(index)  # Directly use get_tensor to avoid parentheses
+
+interpreter = Interpreter(model_path)
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# Load Labels
+with open(label_path, 'r') as f:
+    labels = [line.strip() for line in f.readlines()]
+
+# Phase 2: Input Acquisition & Preprocessing Loop
+cap = cv2.VideoCapture(input_path)
+
+# Define video writer
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter(output_path, fourcc, cap.get(cv2.CAP_PROP_FPS), 
+                      (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))))
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Preprocess the frame
+    input_data = cv2.resize(frame, (input_details[0]['shape'][2], input_details[0]['shape'][1]))
+    input_data = np.expand_dims(input_data, axis=0)
+    
+    if input_details[0]['dtype'] == np.uint8:
+        input_data = input_data.astype(np.uint8)
+
+    # Phase 3: Inference
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+
+    # Safely access tensors to prevent reference issues
+    boxes_data = interpreter.get_tensor(output_details[0]['index'])
+    classes_data = interpreter.get_tensor(output_details[1]['index'])
+    scores_data = interpreter.get_tensor(output_details[2]['index'])
+
+    # Phase 4: Output Interpretation & Handling Loop
+    for i in range(len(scores_data[0])):
+        if scores_data[0][i] >= confidence_threshold:
+            ymin, xmin, ymax, xmax = boxes_data[0][i]
+            (left, right, top, bottom) = (xmin * frame.shape[1], xmax * frame.shape[1],
+                                          ymin * frame.shape[0], ymax * frame.shape[0])
+            
+            # Draw bounding box and label on the frame
+            cv2.rectangle(frame, (int(left), int(top)), (int(right), int(bottom)), (255, 0, 0), 2)
+            object_name = labels[int(classes_data[0][i])]
+            label = f'{object_name}: {int(scores_data[0][i] * 100)}%'
+            cv2.putText(frame, label, (int(left), int(top) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+
+    # Handle Output
+    out.write(frame)
+
+# Release resources
+cap.release()
+out.release()
