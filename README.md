@@ -45,6 +45,13 @@ This repository contains code of the paper "Autopilots Need Parachutes: Lessons 
 
 All commands assume you run them from the repository root.
 
+> Note that we used short names of stages mismatching from the paper, the name mappings (- name_in_paper: names_in_code) are:
+> - DP: data, dp, DataProcessor
+> - MC: convert, mc, ModelConverter
+> - ArdSG: sg, SketchGenerator
+> - PyCPU-SG: psg, pysg, PySketchGenerator
+> - PyTPU-SG: tpusg, TPUSketchGenerator
+
 ### Batch orchestration & Tutorial
 
 `src/main.py` is the central entry point for running experiments and batch tests. It orchestrates repeated runs across selected processors and models.
