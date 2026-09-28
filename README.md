@@ -1,6 +1,10 @@
-# Autopilots Need Parachutes: Lessons Learned from LLM-Automated Embedded ML Pipelines
+# Experimental data - Autopilots Need Parachutes: Lessons Learned from LLM-Automated Embedded ML Pipelines
 
-**This repository mainly provides the original data and test results reported in the paper: [experimental_data/](experimental_data/README_exp-data.md) stores the experimental data and results used to generate the report in the paper.** To access the source code and experience our framework more smoothly, please visit [beaver-edge/middleware26-artifacts](https://github.com/beaver-edge/middleware26-artifacts), though this outdated repository still remains instructional.
+**This repository mainly provides the original data and test results reported in the paper: [experimental_data/](experimental_data/README_exp-data.md) stores the experimental data and results used to generate the report in the paper.** 
+
+## To access the source code and experience our framework more smoothly, please visit [beaver-edge/middleware26-artifacts](https://github.com/beaver-edge/middleware26-artifacts), though this outdated repository still remains instructional.
+
+
 ## Installation
 
 ### Prerequisites
